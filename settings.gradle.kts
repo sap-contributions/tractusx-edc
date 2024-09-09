@@ -52,6 +52,7 @@ include(":edc-extensions:dcp:tx-dcp")
 include(":edc-extensions:dcp:tx-dcp-sts-dim")
 include(":edc-extensions:data-flow-properties-provider")
 include(":edc-extensions:backport:azblob-provisioner")
+include(":edc-extensions:contract-validation")
 
 
 // extensions - data plane

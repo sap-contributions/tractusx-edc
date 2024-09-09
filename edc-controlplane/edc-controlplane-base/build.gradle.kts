@@ -30,6 +30,7 @@ dependencies {
     runtimeOnly(project(":edc-extensions:edr:edr-api-v2"))
     runtimeOnly(project(":edc-extensions:edr:edr-callback"))
     runtimeOnly(project(":edc-extensions:tokenrefresh-handler"))
+    runtimeOnly(project(":edc-extensions:contract-validation"))
     runtimeOnly(libs.edc.core.edrstore)
     runtimeOnly(libs.edc.edr.store.receiver)
     runtimeOnly(libs.edc.dpf.transfer.signaling)
