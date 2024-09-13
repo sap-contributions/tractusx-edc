@@ -6,6 +6,7 @@ import org.eclipse.edc.policy.model.*;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.TypeManager;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiPredicate;
 
@@ -14,10 +15,13 @@ public class PolicyEqualityV2 extends PolicyEquality implements BiPredicate<Poli
     private final Monitor monitor;
     private final ObjectMapper mapper;
 
-    public PolicyEqualityV2(TypeManager typeManager, Monitor monitor) {
+    private final Comparator<Constraint> constraintComparator;
+
+    public PolicyEqualityV2(TypeManager typeManager, Monitor monitor, Comparator<Constraint> constraintComparator) {
         super(typeManager);
         this.monitor = monitor;
         this.mapper = typeManager.getMapper();
+        this.constraintComparator = constraintComparator;
     }
 
     @Override
@@ -75,7 +79,30 @@ public class PolicyEqualityV2 extends PolicyEquality implements BiPredicate<Poli
 
     protected List<Constraint> sortConstraint(List<Constraint> constraints) {
 
-        return constraints.stream().sorted(new ConstraintComparator()).map(this::sortMultiplicityConstraint).toList();
+        return constraints.stream()
+                .map(this::unwrapMultiplicityConstraint)
+                .map(this::sortMultiplicityConstraint)
+                .sorted(constraintComparator)
+                .toList();
+    }
+
+    /**
+     * If a {@link MultiplicityConstraint} has just one constraint,
+     * unwrap it, because it is logically equal to wrapped constraint.
+     * AND(CONSTRAINT_A) === CONSTRAINT_A
+     * OR(CONSTRAINT_B) === CONSTRAINT_B
+     * XONE(CONSTRAINT_C) === CONSTRAINT_C
+     *
+     * @param constraint input constraint
+     * @return constraint updated constraint or original
+     */
+    protected Constraint unwrapMultiplicityConstraint(Constraint constraint) {
+
+        if (constraint instanceof MultiplicityConstraint mc && mc.getConstraints().size() == 1) {
+
+            return mc.getConstraints().get(0);
+        }
+        return constraint;
     }
 
     protected Constraint sortMultiplicityConstraint(Constraint constraint) {

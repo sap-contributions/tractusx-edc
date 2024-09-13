@@ -11,6 +11,9 @@ import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 import org.eclipse.edc.spi.types.TypeManager;
+import org.eclipse.tractusx.edc.controlplane.contract.validation.ConstraintComparator;
+import org.eclipse.tractusx.edc.controlplane.contract.validation.ConstraintComparator.AtomicConstraintComparator;
+import org.eclipse.tractusx.edc.controlplane.contract.validation.ConstraintComparator.MultiplicityConstraintComparator;
 import org.eclipse.tractusx.edc.controlplane.contract.validation.PolicyEqualityV2;
 
 @Provides({ContractValidationService.class})
@@ -38,7 +41,9 @@ public class ContractValidationExtension implements ServiceExtension {
     @Override
     public void initialize(ServiceExtensionContext context) {
 
-        var policyEqualityV2 = new PolicyEqualityV2(typeManager, monitor);
+        MultiplicityConstraintComparator multiplicityConstraintComparator = new MultiplicityConstraintComparator(typeManager);
+        ConstraintComparator constraintComparator = new ConstraintComparator(multiplicityConstraintComparator, new AtomicConstraintComparator());
+        var policyEqualityV2 = new PolicyEqualityV2(typeManager, monitor, constraintComparator);
         var validationServiceV2 = new ContractValidationServiceImpl(assetIndex, policyEngine, policyEqualityV2);
         context.registerService(ContractValidationService.class, validationServiceV2);
     }

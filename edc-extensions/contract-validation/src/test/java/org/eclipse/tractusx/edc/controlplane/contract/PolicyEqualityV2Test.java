@@ -5,6 +5,9 @@ import org.eclipse.edc.policy.model.*;
 import org.eclipse.edc.spi.monitor.ConsoleMonitor;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.TypeManager;
+import org.eclipse.tractusx.edc.controlplane.contract.validation.ConstraintComparator;
+import org.eclipse.tractusx.edc.controlplane.contract.validation.ConstraintComparator.AtomicConstraintComparator;
+import org.eclipse.tractusx.edc.controlplane.contract.validation.ConstraintComparator.MultiplicityConstraintComparator;
 import org.eclipse.tractusx.edc.controlplane.contract.validation.PolicyEqualityV2;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,12 +28,14 @@ class PolicyEqualityV2Test {
 
     private final TypeManager typeManager = new JacksonTypeManager();
     private final Monitor monitor = new ConsoleMonitor();
+    private final MultiplicityConstraintComparator multiplicityConstraintComparator = new MultiplicityConstraintComparator(typeManager);
+    private final ConstraintComparator constraintComparator = new ConstraintComparator(multiplicityConstraintComparator, new AtomicConstraintComparator());
 
     PolicyEqualityV2 policyEqualityV2;
 
     @BeforeEach
     void setup() {
-        policyEqualityV2 = new PolicyEqualityV2(typeManager, monitor);
+        policyEqualityV2 = new PolicyEqualityV2(typeManager, monitor, constraintComparator);
     }
 
 
@@ -126,6 +131,54 @@ class PolicyEqualityV2Test {
 
         Permission p1 = createPermission(ac3, oc1);
         Permission p2 = createPermission(oc2, ac3);
+
+        Policy one = Policy.Builder.newInstance().permission(p1).build();
+        Policy two = Policy.Builder.newInstance().permission(p2).build();
+
+
+        assertTrue(policyEqualityV2.test(one, two));
+    }
+
+    @Test
+    void testWrappedSinglePolicy() {
+
+        AtomicConstraint ac1 = createAtomicConstraint(BUSINESS_PARTNER_GROUP, Operator.EQ, GROUP_GOLD_PARTNERS);
+        AtomicConstraint ac2 = createAtomicConstraint(BUSINESS_PARTNER_NUMBER, Operator.EQ, BPN_1);
+
+        AndConstraint oc1 = createAndConstraint(ac1);
+        OrConstraint oc2 = createOrConstraint(ac2);
+
+        OrConstraint or1 = createOrConstraint(oc1, oc2);
+        OrConstraint or2 = createOrConstraint(ac1, ac2);
+
+
+        Permission p1 = createPermission(or1);
+        Permission p2 = createPermission(or2);
+
+        Policy one = Policy.Builder.newInstance().permission(p1).build();
+        Policy two = Policy.Builder.newInstance().permission(p2).build();
+
+
+        assertTrue(policyEqualityV2.test(one, two));
+    }
+
+    @Test
+    void testTwoAndPolicyAtSameLevelCompareByHash() {
+
+        AtomicConstraint ac1 = createAtomicConstraint(BUSINESS_PARTNER_GROUP, Operator.EQ, GROUP_GOLD_PARTNERS);
+        AtomicConstraint ac2 = createAtomicConstraint(BUSINESS_PARTNER_NUMBER, Operator.EQ, BPN_1);
+        AtomicConstraint ac3 = createAtomicConstraint(BUSINESS_PARTNER_GROUP, Operator.EQ, GROUP_SILVER_PARTNERS);
+        AtomicConstraint ac4 = createAtomicConstraint(BUSINESS_PARTNER_NUMBER, Operator.EQ, BPN_2);
+
+        AndConstraint oc1 = createAndConstraint(ac1, ac2);
+        AndConstraint oc2 = createAndConstraint(ac3, ac4);
+
+        OrConstraint or1 = createOrConstraint(oc1, oc2);
+        OrConstraint or2 = createOrConstraint(oc2, oc1);
+
+
+        Permission p1 = createPermission(or1);
+        Permission p2 = createPermission(or2);
 
         Policy one = Policy.Builder.newInstance().permission(p1).build();
         Policy two = Policy.Builder.newInstance().permission(p2).build();
