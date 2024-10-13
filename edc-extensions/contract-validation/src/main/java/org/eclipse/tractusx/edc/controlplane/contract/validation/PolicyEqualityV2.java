@@ -92,6 +92,8 @@ public class PolicyEqualityV2 extends PolicyEquality implements BiPredicate<Poli
      * AND(CONSTRAINT_A) === CONSTRAINT_A
      * OR(CONSTRAINT_B) === CONSTRAINT_B
      * XONE(CONSTRAINT_C) === CONSTRAINT_C
+     * AND(OR(CONSTRAINT_D)) === CONSTRAINT_D
+     * AND(OR(AND(CONSTRAINT_E))) === CONSTRAINT_E
      *
      * @param constraint input constraint
      * @return constraint updated constraint or original
@@ -100,7 +102,7 @@ public class PolicyEqualityV2 extends PolicyEquality implements BiPredicate<Poli
 
         if (constraint instanceof MultiplicityConstraint mc && mc.getConstraints().size() == 1) {
 
-            return mc.getConstraints().get(0);
+            return unwrapMultiplicityConstraint(mc.getConstraints().get(0));
         }
         return constraint;
     }
