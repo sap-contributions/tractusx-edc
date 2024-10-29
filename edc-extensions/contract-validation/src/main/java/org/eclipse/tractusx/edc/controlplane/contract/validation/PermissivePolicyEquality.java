@@ -1,3 +1,16 @@
+/********************************************************************************
+ *  Copyright (c) 2024 SAP SE
+ *
+ *  This program and the accompanying materials are made available under the
+ *  terms of the Apache License, Version 2.0 which is available at
+ *  https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  SPDX-License-Identifier: Apache-2.0
+ *
+ *  Contributors:
+ *       SAP SE - initial API and implementation
+ *
+ ********************************************************************************/
 package org.eclipse.tractusx.edc.controlplane.contract.validation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,14 +23,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiPredicate;
 
-public class PolicyEqualityV2 extends PolicyEquality implements BiPredicate<Policy, Policy> {
+public class PermissivePolicyEquality extends PolicyEquality implements BiPredicate<Policy, Policy> {
 
     private final Monitor monitor;
     private final ObjectMapper mapper;
 
     private final Comparator<Constraint> constraintComparator;
 
-    public PolicyEqualityV2(TypeManager typeManager, Monitor monitor, Comparator<Constraint> constraintComparator) {
+    public PermissivePolicyEquality(TypeManager typeManager, Monitor monitor, Comparator<Constraint> constraintComparator) {
         super(typeManager);
         this.monitor = monitor;
         this.mapper = typeManager.getMapper();
